@@ -139,30 +139,30 @@ export default function Cms() {
                                                 <FileJson size={14} />
                                             </button>
 
-                                            <button
-                                                onClick={() => setEditingPod(pod)}
-                                                className="p-2.5 bg-slate-50 border border-slate-100 rounded-sm text-slate-400 hover:text-slate-900 transition-all"
-                                                title="Edit Node"
-                                            >
-                                                <Edit3 size={14} />
-                                            </button>
+                                            {/*<button*/}
+                                            {/*    onClick={() => setEditingPod(pod)}*/}
+                                            {/*    className="p-2.5 bg-slate-50 border border-slate-100 rounded-sm text-slate-400 hover:text-slate-900 transition-all"*/}
+                                            {/*    title="Edit Node"*/}
+                                            {/*>*/}
+                                            {/*    <Edit3 size={14} />*/}
+                                            {/*</button>*/}
 
                                             <Link to={`/edit/${pod.id}`} aria-label="View audit details" className="p-2.5 bg-slate-50 border border-slate-100 rounded-sm text-slate-400 hover:text-slate-900 transition-all">
                                                 <ExternalLink size={14} />
                                             </Link>
-                                            <Link to={`/audit/${pod.id}`} aria-label="View audit details" className="p-2.5 bg-slate-50 border border-slate-100 rounded-sm text-slate-400 hover:text-slate-900 transition-all">
-                                                <Eye size={14} />
-                                            </Link>
+                                            {/*<Link to={`/audit/${pod.id}`} aria-label="View audit details" className="p-2.5 bg-slate-50 border border-slate-100 rounded-sm text-slate-400 hover:text-slate-900 transition-all">*/}
+                                            {/*    <Eye size={14} />*/}
+                                            {/*</Link>*/}
 
 
                                             {/* THE DELETE ACTION */}
-                                            <button
-                                                onClick={() => deletePodcast(pod.id) }
-                                                className="p-2.5 bg-red-50/50 border border-red-100 rounded-sm text-red-400 hover:bg-red-500 hover:text-white transition-all"
-                                                title="Delete Signal"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                                            {/*<button*/}
+                                            {/*    onClick={() => deletePodcast(pod.id) }*/}
+                                            {/*    className="p-2.5 bg-red-50/50 border border-red-100 rounded-sm text-red-400 hover:bg-red-500 hover:text-white transition-all"*/}
+                                            {/*    title="Delete Signal"*/}
+                                            {/*>*/}
+                                            {/*    <Trash2 size={14} />*/}
+                                            {/*</button>*/}
                                         </div>
                                     </td>
                                 </tr>
