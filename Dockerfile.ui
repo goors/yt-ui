@@ -8,10 +8,10 @@ ARG VITE_API_URL
 # Set it as an Env var so the build process picks it up
 ENV VITE_API_URL=$VITE_API_URL
 
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-COPY frontend/ .
+COPY . .
 # During this command, Vite replaces import.meta.env.VITE_API_URL with your URL
 RUN pnpm run build
 
