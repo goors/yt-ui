@@ -1,0 +1,72 @@
+# 2. UI DEPLOYMENT
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yt-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yt-ui # Matches Service Selector
+      component: ui
+  template:
+    metadata:
+      labels:
+        app: yt-ui # Matches Service Selector
+        component: ui
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: ui
+          image: "pregmatch/shiny-flake:yt-ui-${IMAGE_TAG}"
+          ports:
+            - containerPort: 80
+
+---
+# 3. UI SERVICE (Synced to Deployment)
+apiVersion: v1
+kind: Service
+metadata:
+  name: yt-ui-service
+spec:
+  type: ClusterIP
+  selector:
+    app: yt-ui
+    component: ui
+  ports:
+    - protocol: TCP
+      port: 80       # Match your Ingress rule
+      targetPort: 80   # Match your Container port
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: yt-ui
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # REMOVED: canary and canary-weight
+    nginx.ingress.kubernetes.io/proxy-body-size: "1024m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - logical.pregmatch.org
+      secretName: logical-pregmatch-org-tls
+  rules:
+    - host: logical.pregmatch.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: yt-ui-service
+                port:
+                  number: 80

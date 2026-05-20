@@ -1,0 +1,56 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  # --- 1. UI BUILD JOB ---
+  ui-service:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'ui')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login & Build UI
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u pregmatch --password-stdin
+          docker build \
+            --build-arg VITE_API_URL="https://yt.api.pregmatch.org" \
+            -t pregmatch/shiny-flake:yt-ui-${{ github.sha }} \
+            -t pregmatch/shiny-flake:yt-ui-latest \
+            -f Dockerfile.ui .
+          docker push pregmatch/shiny-flake:yt-ui-${{ github.sha }}
+          docker push pregmatch/shiny-flake:yt-ui-latest
+
+  # --- 2. UI DEPLOY JOB ---
+  deploy-ui:
+    runs-on: ubuntu-latest
+    # Configures dependency and ensures execution even if the build block is skipped
+    needs: ui-service
+    steps:
+      - uses: actions/checkout@v4 # Pulls repository manifests into the isolated runner context
+
+      - name: Deploy UI to Garage
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          mkdir -p ~/.kube ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+          
+          # Start tunnel securely pointing back to the internal control plane
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -f -N -L 6444:10.200.0.1:6443 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+          
+          echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+          sed -i 's#10.200.0.1:6443#127.0.0.1:6444#g' ~/.kube/config
+          
+          # Refresh registry credentials on target cluster namespace
+          kubectl delete secret regcred --ignore-not-found
+          kubectl create secret docker-registry regcred \
+            --docker-server=docker.io \
+            --docker-username=pregmatch \
+            --docker-password="${{ secrets.DOCKERHUB_TOKEN }}" \
+            --docker-email=dev@pregmatch.org
+          
+          # Inject image hash and deploy to the cluster
+          envsubst < deploy-ui.yaml | kubectl apply -f -
