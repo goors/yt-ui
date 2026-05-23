@@ -14,10 +14,10 @@ const rootRoute = createRootRoute({
     component: () => (
         <>
             {/* The Navbar is now inside the Router context! */}
-            <Navbar />
+            {/*<Navbar />*/}
 
             {/* This is where your pages (Home, Audit, About) will render */}
-            <main className="pt-[72px]">
+            <main >
                 <Outlet />
             </main>
         </>
