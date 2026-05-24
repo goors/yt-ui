@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import ReactJson from 'react-json-view';
 import {
-    Database, FileJson, X, ExternalLink, Edit3, Trash2, Award,
-    Fingerprint, FileText, ImageIcon, Save, Link as LinkIcon, IdCardIcon, BuildingIcon, Info
+    Database, FileJson, X, Edit3, Trash2,
+    Fingerprint, ImageIcon, Save, Link as LinkIcon, IdCardIcon, BuildingIcon, Info
 } from 'lucide-react';
-import { Link } from "@tanstack/react-router";
 import Navbar from "@/components/navbar.tsx";
 import React from "react";
 
@@ -70,7 +69,7 @@ export default function Cms() {
 
         return (
             <div className="flex flex-col gap-1 w-44">
-                <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+                <div className="flex justify-between text-[12px] font-bold text-gray-500 uppercase tracking-wide">
                     <span>Focus: {metrics.overall_weight}%</span>
                     <span className="text-blue-600">Clarity: {metrics.purity_score}%</span>
                 </div>
@@ -108,17 +107,17 @@ export default function Cms() {
 
 // --- Updated Table Layout ---
     return (
-        <div className="min-h-screen bg-white text-[#202124] font-sans">
-            <Navbar />
+        <div className="bg-white text-[#202124] font-sans">
+            {/*<Navbar />*/}
             <main className="w-full bg-[#f8f9fa] ">
                 {/* Remove overflow-hidden from here, it breaks sticky */}
                 <div className="border border-gray-200 bg-white shadow-sm rounded-lg">
 
                     {/* Table needs a defined height or the container needs it to scroll */}
-                    <div className="max-h-[85vh] overflow-auto">
+                    <div className="overflow-auto">
                         <table className="w-full text-left border-collapse">
                             <thead className="sticky top-0 bg-[#f1f3f4] z-20 border-b border-gray-300 shadow-sm">
-                            <tr className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold">
+                            <tr className="text-[12px] text-gray-600 uppercase tracking-wider font-semibold">
                                 <th className="py-3 px-6 sticky top-0 bg-[#f1f3f4]">Candidate</th>
                                 <th className="py-3 px-6 sticky top-0 bg-[#f1f3f4]">Position</th>
                                 <th className="py-3 px-6 sticky top-0 bg-[#f1f3f4]">Focus</th>
@@ -141,18 +140,18 @@ export default function Cms() {
                                         <tr className="bg-white hover:bg-[#e8f0fe] transition-colors group">
                                             <td className="py-4 px-6 text-[13px] font-medium text-gray-900 border-l-4 border-l-transparent group-hover:border-l-blue-500">{pod.podcast}</td>
                                             <td className="py-4 px-6 text-[13px] text-gray-600">{pod.position}</td>
-                                            <td className="py-4 px-6 text-[11px] font-bold text-blue-700 uppercase tracking-tight">{getMainPillar(m)}</td>
-                                            <td className="py-4 px-6 text-[11px] font-medium text-gray-500">{isStrict ? "STRICT" : "FLEX"}</td>
+                                            <td className="py-4 px-6 text-[12px] font-bold text-blue-700 uppercase tracking-tight">{getMainPillar(m)}</td>
+                                            <td className="py-4 px-6 text-[12px] font-medium text-gray-500">{isStrict ? "STRICT" : "FLEX"}</td>
                                             <td className="py-2 px-6"><CompetencyCell metrics={m.Logic_Consistency || {}} /></td>
                                             <td className="py-2 px-6"><CompetencyCell metrics={m.Contextual_Clarity || {}} /></td>
                                             <td className="py-2 px-6"><CompetencyCell metrics={m.Execution_Velocity || {}} /></td>
                                             <td className="py-4 px-6">
                                                 {details?.recommendation?.action ? (
-                                                    <span className="text-[10px] font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded-full uppercase tracking-wider">
+                                                    <span className="text-[12px] font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded-full uppercase tracking-wider">
                                     {details.recommendation.action}
                                 </span>
                                                 ) : (
-                                                    <span className="text-[10px] text-gray-300">Pending</span>
+                                                    <span className="text-[12px] text-gray-300">Pending</span>
                                                 )}
                                             </td>
                                             <td className="py-4 px-6 text-right">
@@ -174,12 +173,12 @@ export default function Cms() {
                                                                     <span className="text-[9px] font-bold text-blue-600 uppercase tracking-wider">{p.pillar}</span>
                                                                     <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 rounded">{p.result}</span>
                                                                 </div>
-                                                                <p className="text-[11px] text-gray-600 leading-relaxed">{p.reasoning}</p>
+                                                                <p className="text-[12px] text-gray-600 leading-relaxed">{p.reasoning}</p>
                                                             </div>
                                                         ))}
                                                     </div>
                                                     <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-                                                        <div className="md:col-span-2 p-4 bg-blue-50/50 border border-blue-100 rounded text-[11px] text-gray-700">
+                                                        <div className="md:col-span-2 p-4 bg-blue-50/50 border border-blue-100 rounded text-[12px] text-gray-700">
                                                             <span className="font-bold text-blue-900 uppercase tracking-wider mr-2">Verdict:</span>
                                                             {details.verdict}
                                                         </div>
@@ -198,7 +197,7 @@ export default function Cms() {
                                                                             <Info size={14} />
                                                                         </button>
                                                                     </div>
-                                                                    <p className="text-[10px] text-gray-600 mb-3">{details.recommendation.reasoning}</p>
+                                                                    <p className="text-[12px] text-gray-600 mb-3">{details.recommendation.reasoning}</p>
                                                                     {details.recommendation.focus_area && (
                                                                         <div className="text-[9px] font-bold text-blue-600 uppercase bg-blue-50 px-2 py-1 rounded inline-block">
                                                                             Focus: {details.recommendation.focus_area}
@@ -238,7 +237,7 @@ export default function Cms() {
 
                         {/* Educational Context Section */}
                         <div className="border-t border-gray-100 pt-4">
-                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                            <h4 className="text-[12px] font-bold uppercase tracking-widest text-gray-400 mb-2">
                                 Why this step?
                             </h4>
                             <p className="text-[12px] text-gray-600 leading-relaxed">
@@ -262,7 +261,7 @@ export default function Cms() {
 
                         <button
                             onClick={() => setSelectedRecommendation(null)}
-                            className="w-full mt-6 py-2 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-widest rounded hover:bg-gray-800 transition-colors"
+                            className="w-full mt-6 py-2 bg-gray-900 text-white text-[12px] font-bold uppercase tracking-widest rounded hover:bg-gray-800 transition-colors"
                         >
                             Close
                         </button>
@@ -288,56 +287,56 @@ export default function Cms() {
 
                             <div className="flex-1 overflow-auto p-10 space-y-12">
                                 <div className="space-y-4">
-                                    <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
+                                    <label className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-slate-400 font-mono">
                                         <Fingerprint size={12} /> Id
                                     </label>
                                     {editingPod.id}
                                 </div>
                                 <div className="space-y-4">
-                                    <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
+                                    <label className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-slate-400 font-mono">
                                         <Fingerprint size={12} /> Title
                                     </label>
                                     <input name="title" defaultValue={editingPod.podcast} className="w-full text-2xl font-light border-b border-slate-100 focus:border-slate-900 outline-none pb-2 transition-all" />
                                 </div>
                                 <div className="space-y-4">
-                                    <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
+                                    <label className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-slate-400 font-mono">
                                         <IdCardIcon size={12} /> Speaker id
                                     </label>
                                     <input name="speaker" defaultValue={editingPod.speaker} className="w-full text-2xl font-light border-b border-slate-100 focus:border-slate-900 outline-none pb-2 transition-all" />
                                 </div>
                                 <div className="space-y-4">
-                                    <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
+                                    <label className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-slate-400 font-mono">
                                         <BuildingIcon size={12} /> Position
                                     </label>
                                     <input name="position" defaultValue={editingPod.position} className="w-full text-2xl font-light border-b border-slate-100 focus:border-slate-900 outline-none pb-2 transition-all" />
                                 </div>
                                 {/*<div className="space-y-4">*/}
-                                {/*    <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">*/}
+                                {/*    <label className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-slate-400 font-mono">*/}
                                 {/*        <FileText size={12} /> Description*/}
                                 {/*    </label>*/}
                                 {/*    <textarea name="description" defaultValue={editingPod.description} rows={3} className="w-full text-sm font-light leading-relaxed border border-slate-100 focus:border-slate-900 outline-none p-4 transition-all resize-none" />*/}
                                 {/*</div>*/}
                                 <div className="space-y-4">
-                                    <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
+                                    <label className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-slate-400 font-mono">
                                         <Database size={12} /> Audio File Name (Reference)
                                     </label>
                                     <input name="audio" defaultValue={editingPod.audio} className="w-full text-xs font-mono text-slate-500 border-b border-slate-100 focus:border-slate-900 outline-none pb-2 transition-all" />
                                 </div>
                                 <div className="grid grid-cols-1 gap-12">
                                     <div className="space-y-4">
-                                        <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
+                                        <label className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-slate-400 font-mono">
                                             <LinkIcon size={12} /> URL
                                         </label>
                                         <input name="url" defaultValue={editingPod.url} className="w-full text-xs font-mono text-blue-600 border-b border-slate-100 focus:border-slate-900 outline-none pb-2 transition-all" />
                                     </div>
                                     <div className="space-y-4">
-                                        <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
+                                        <label className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-slate-400 font-mono">
                                             <ImageIcon size={12} /> Thumbnail_URI
                                         </label>
                                         <input name="thumbnail" defaultValue={editingPod.thumbnail} className="w-full text-xs font-mono text-slate-500 border-b border-slate-100 focus:border-slate-900 outline-none pb-2 transition-all" />
                                     </div>
                                     <div className="space-y-4">
-                                        <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
+                                        <label className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-slate-400 font-mono">
                                             Paradigm_Baseline
                                         </label>
                                         <div className="flex gap-6">
@@ -364,14 +363,14 @@ export default function Cms() {
                                         </div>
                                     </div>
                                     <div className="space-y-4">
-                                        <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">Labels</label>
+                                        <label className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-slate-400 font-mono">Labels</label>
                                         <input name="labels" defaultValue={editingPod.labels?.join(", ")} className="w-full text-xs font-mono text-slate-500 border-b border-slate-100 focus:border-slate-900 outline-none pb-2 transition-all" />
                                     </div>
                                 </div>
                             </div>
                             <footer className="p-10 bg-slate-50 border-t border-slate-100 flex justify-between items-center sticky bottom-0">
                                 <span className="text-[9px] font-mono text-slate-400 uppercase">Registry_UID: {editingPod.id?.split('-')[0]}</span>
-                                <button type="submit" className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl">
+                                <button type="submit" className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white text-[12px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl">
                                     <Save size={14} /> Persist_Changes
                                 </button>
                             </footer>
