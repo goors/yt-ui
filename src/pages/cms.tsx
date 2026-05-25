@@ -137,7 +137,13 @@ export default function Cms() {
         }
     };
 
-    const CompetencyCell = ({ metrics }) => {
+    const [dialogueView, setDialogueView] = useState({ isOpen: false, type: null, metrics: null });
+
+    const handleLabelClick = (type, metrics) => {
+        setDialogueView({ isOpen: true, type, metrics });
+    };
+
+    const CompetencyCell = ({ metrics, onLabelClick }) => {
         const greens = getCount(metrics.green_flags);
 
         const reds = metrics.red_flags_count || 0;
@@ -168,13 +174,21 @@ export default function Cms() {
                 </div>
 
                 <div className="mt-2 flex items-center justify-between text-[10px] font-medium">
-                    <span className="text-emerald-600">
+                    {/* Pass 'valid' as the filter type */}
+                    <button
+                        onClick={() => onLabelClick('valid', metrics)}
+                        className="text-emerald-600 hover:text-emerald-800 underline decoration-emerald-200 transition-all cursor-pointer font-bold"
+                    >
                         {greens} Valid
-                    </span>
+                    </button>
 
-                    <span className="text-red-500">
+                    {/* Pass 'error' as the filter type */}
+                    <button
+                        onClick={() => onLabelClick('error', metrics)}
+                        className="text-red-500 hover:text-red-700 underline decoration-red-200 transition-all cursor-pointer font-bold"
+                    >
                         {reds} Errors
-                    </span>
+                    </button>
                 </div>
             </div>
         );
@@ -207,6 +221,31 @@ export default function Cms() {
             pillarMapping[winner[0]] ||
             winner[0].replace(/_/g, " ")
         );
+    };
+
+    // 1. Add this state inside your component
+    const [explanations, setExplanations] = useState({});
+    const [loading, setLoading] = useState({});
+
+// 2. Add this handler
+    const fetchExplanation = async (quote, label, id) => {
+        setLoading(prev => ({ ...prev, [id]: true }));
+        try {
+            const baseUrl =
+                import.meta.env.VITE_API_URL ||
+                "http://localhost:8001";
+            const res = await fetch(`${baseUrl}/explain`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ label, quote })
+            });
+            const data = await res.json();
+            setExplanations(prev => ({ ...prev, [id]: data.explanation }));
+        } catch (e) {
+            console.error("Error:", e);
+        } finally {
+            setLoading(prev => ({ ...prev, [id]: false }));
+        }
     };
 
     return (
@@ -375,6 +414,8 @@ export default function Cms() {
                                                             m.Logic_Consistency ||
                                                             {}
                                                         }
+                                                        onLabelClick={handleLabelClick}
+
                                                     />
                                                 </td>
 
@@ -384,6 +425,7 @@ export default function Cms() {
                                                             m.Contextual_Clarity ||
                                                             {}
                                                         }
+                                                        onLabelClick={handleLabelClick}
                                                     />
                                                 </td>
 
@@ -393,6 +435,7 @@ export default function Cms() {
                                                             m.Execution_Velocity ||
                                                             {}
                                                         }
+                                                        onLabelClick={handleLabelClick}
                                                     />
                                                 </td>
 
@@ -911,6 +954,62 @@ export default function Cms() {
                                         "transparent",
                                 }}
                             />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* METRIC DETAIL MODAL */}
+            {dialogueView.isOpen && dialogueView.metrics && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
+                    <div
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        onClick={() => setDialogueView({ isOpen: false, type: null, metrics: null })}
+                    />
+                    <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8 max-h-[80vh] overflow-hidden flex flex-col">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold uppercase tracking-wider text-slate-800">
+                                {dialogueView.type === 'valid' ? 'Valid Flag Analysis' : 'Error Flag Analysis'}
+                            </h2>
+                            <button
+                                onClick={() => setDialogueView({ isOpen: false, type: null, metrics: null })}
+                                className="p-2 hover:bg-slate-100 rounded-full"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="overflow-y-auto pr-2 space-y-4">
+                            {(dialogueView.type === 'valid' ? dialogueView.metrics.green_flags : dialogueView.metrics.red_flags || []).map((item, i) => (
+                                <div key={i} className="border border-slate-100 p-4 rounded-xl">
+                                    <h4 className="font-bold text-sm text-slate-800">{item.label} ({item.count})</h4>
+                                    <p className="text-xs text-slate-500 mb-3">{item.description}</p>
+                                    <div className="space-y-2">
+                                        {item.quotes.map((q, idx) => {
+                                            const id = `${i}-${idx}`; // Unique ID for each quote
+                                            return (
+                                                <div key={idx} className="bg-slate-50 p-3 rounded border border-slate-100">
+                                                    <p className="text-xs italic text-slate-600 mb-2">"{q}"</p>
+
+                                                    {explanations[id] ? (
+                                                        <p className="text-[11px] text-blue-800 font-medium border-l-2 border-blue-400 pl-2">
+                                                            {explanations[id]}
+                                                        </p>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => fetchExplanation(q, item.label, id)}
+                                                            disabled={loading[id]}
+                                                            className="text-[10px] uppercase font-bold text-blue-600 hover:text-blue-800 underline"
+                                                        >
+                                                            {loading[id] ? "Analyzing..." : "Why is this a flag? →"}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
