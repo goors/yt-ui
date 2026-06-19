@@ -57,10 +57,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - logical.pregmatch.org
-      secretName: logical-pregmatch-org-tls
+        - telentos.pregmatch.org
+      secretName: telentos-pregmatch-org-tls
   rules:
-    - host: logical.pregmatch.org
+    - host: telentos.pregmatch.org
       http:
         paths:
           - path: /

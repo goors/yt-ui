@@ -1,158 +1,80 @@
-// import { useNavigate, useLocation } from '@tanstack/react-router';
-// import { Terminal, Activity, Share2, Bookmark, ArrowLeft } from 'lucide-react';
-//
-// interface NavbarProps {
-//     onOpenArchive?: () => void;
-// }
-//
-// export default function Navbar({ onOpenArchive }: NavbarProps) {
-//     const navigate = useNavigate();
-//     const location = useLocation();
-//
-//     // Determine the current "view"
-//     const isHome = location.pathname === '/';
-//     const isAbout = location.pathname === '/about';
-//     const isAudit = location.pathname.startsWith('/audit/');
-//
-//     return (
-//         <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-[100] px-6 py-4 flex justify-between items-center border-b border-slate-100 h-[64px]">
-//             {/* LEFT SIDE: Brand / Back Button */}
-//             <div className="flex items-center">
-//                 {isHome ? (
-//                     <div className="flex items-center gap-3">
-//                         <Terminal size={16} />
-//                         <span className="text-[11px] tracking-[0.3em] font-bold uppercase">Logic Registry</span>
-//                     </div>
-//                 ) : (
-//                     <button
-//                         onClick={() => navigate({ to: '/' })}
-//                         className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:text-red-600 transition-colors group"
-//                     >
-//                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-//                         {isAbout ? "Back to Registry" : "Return to Index"}
-//                     </button>
-//                 )}
-//             </div>
-//
-//             {/* RIGHT SIDE: Action Tools */}
-//             <div className="flex items-center gap-6">
-//                 {/* Always show About link except when on About page */}
-//                 {/*{!isAbout && (*/}
-//                 {/*    <button*/}
-//                 {/*        onClick={() => navigate({ to: '/about' })}*/}
-//                 {/*        className="text-[10px] tracking-[0.2em] font-bold hover:text-red-600 transition-colors uppercase"*/}
-//                 {/*    >*/}
-//                 {/*        About*/}
-//                 {/*    </button>*/}
-//                 {/*)}*/}
-//
-//                 {/* Show Share/Bookmark only on Audits */}
-//                 {isAudit && (
-//                     <div className="flex items-center gap-6 border-l border-slate-100 pl-6">
-//                         <Share2 size={16} className="cursor-pointer text-slate-400 hover:text-black transition-colors" />
-//                         <Bookmark size={16} className="cursor-pointer text-slate-400 hover:text-black transition-colors" />
-//                     </div>
-//                 )}
-//
-//                 {/*/!* Full Archive Button - Show on Home (or everywhere if you prefer) *!/*/}
-//                 {/*{isHome && (*/}
-//                 {/*    <button*/}
-//                 {/*        onClick={onOpenArchive}*/}
-//                 {/*        className="text-[10px] tracking-[0.2em] font-bold hover:text-red-600 transition-colors flex items-center gap-2 px-3 py-1.5 rounded-md bg-white border border-slate-100 hover:border-slate-200"*/}
-//                 {/*    >*/}
-//                 {/*        <Activity size={12} /> Full Archive*/}
-//                 {/*    </button>*/}
-//                 {/*)}*/}
-//             </div>
-//         </nav>
-//     );
-// }
+import React from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Command, UserPlus, Users } from 'lucide-react';
+import { UserProfile } from "@/components/user-profile.tsx";
+import { Link } from "@tanstack/react-router";
 
-import { useNavigate, useLocation } from '@tanstack/react-router';
-import { Terminal, Share2, Bookmark, ArrowLeft, RefreshCw, MoreVertical, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+export default function Sidebar() {
+    return (
+        <aside className="w-[68px] flex flex-col justify-between items-center py-6 bg-zinc-950 h-screen border-r border-zinc-900 shrink-0">
+            <TooltipProvider delayDuration={0}>
+                <div className="flex flex-col items-center gap-8 w-full">
+                    {/* Brand Logo - Sleek Monochrome Metallic Frame */}
+                    <Link
+                        to="/"
+                        className="w-9 h-9 rounded-xl flex items-center justify-center bg-white text-zinc-950 shadow-md shadow-white/5 hover:scale-[1.04] active:scale-95 transition-all duration-300 border border-zinc-200"
+                    >
+                        <Command className="w-5 h-5" />
+                    </Link>
 
-interface NavbarProps {
-    onOpenArchive?: () => void;
-    totalCount?: number;
+                    {/* Nav Items */}
+                    <nav className="flex flex-col items-center gap-2 w-full">
+                        {/* Add Candidate (Action Button, Uniform Design) */}
+                        <SidebarLink to="/add-candidate" icon={UserPlus} label="New Candidate" />
+
+                        {/* Faded Divider */}
+                        <div className="w-8 h-[1px] bg-gradient-to-r from-transparent via-zinc-800 to-transparent my-3" />
+
+                        {/* Navigation Links */}
+                        <SidebarLink to="/candidates" icon={Users} label="Candidates" />
+                    </nav>
+                </div>
+
+                {/* Footer */}
+                <div className="flex flex-col items-center gap-5 w-full">
+                    <div className="p-1 rounded-full border border-zinc-800/60 bg-zinc-900/30">
+                        <UserProfile />
+                    </div>
+                </div>
+            </TooltipProvider>
+        </aside>
+    );
 }
 
-export default function Navbar({ onOpenArchive, totalCount = 0 }: NavbarProps) {
-    const navigate = useNavigate();
-    const location = useLocation();
+interface SidebarLinkProps {
+    to?: string;
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    onClick?: () => void;
+}
 
-    const isHome = location.pathname === '/';
-    const isAbout = location.pathname === '/about';
-    const isAudit = location.pathname.startsWith('/audit/');
+function SidebarLink({ to, icon: Icon, label, onClick }: SidebarLinkProps) {
+    const baseClass = "w-11 h-11 rounded-xl transition-all duration-300 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50 hover:scale-[1.03] active:scale-95 flex items-center justify-center relative group [&.active]:text-white [&.active]:bg-zinc-900 [&.active]:ring-1 [&.active]:ring-zinc-800";
+
+    const content = (
+        <>
+            {/* Active & Hover Line Indicator on Left Edge (White Accent) */}
+            <div className="absolute left-0 w-[3px] h-5 rounded-r-md bg-white origin-left scale-y-0 group-hover:scale-y-50 group-[.active]:scale-y-100 transition-all duration-200" />
+            <Icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-[1.05]" />
+        </>
+    );
 
     return (
-        /* REMOVED: fixed, top-0, z-[100] */
-        /* ADDED: shrink-0 (prevents the flex container from squishing the header height) */
-        <nav className="w-full bg-white border-b border-[#f0f0f0] h-[48px] px-4 flex justify-between items-center select-none shrink-0">
-            {/* LEFT SIDE: Identity or Context-Aware Back Button */}
-            <div className="flex items-center gap-6">
-                {isHome ? (
-                    <div className="flex items-center gap-2.5 text-[#444746]">
-                        <Terminal size={18} className="text-[#1f1f1f]" />
-                        <span className="text-[14px] font-semibold tracking-normal text-[#1f1f1f]">Logic Audit</span>
-                    </div>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                {to ? (
+                    <Link to={to} className={baseClass}>
+                        {content}
+                    </Link>
                 ) : (
-                    <button
-                        onClick={() => navigate({ to: '/' })}
-                        className="flex items-center gap-2 text-[12px] font-medium text-[#444746] hover:bg-[#f1f3f4] px-3 py-1.5 rounded-md transition-colors"
-                    >
-                        <ArrowLeft size={16} />
-                        <span>{isAbout ? "Back to Registry" : "Back to Index"}</span>
+                    <button onClick={onClick} className={baseClass}>
+                        {content}
                     </button>
                 )}
-
-                {/* Gmail-style primary action bar items (visible on index view) */}
-                {isHome && (
-                    <div className="flex items-center gap-1 border-l border-[#e0e0e0] pl-4 text-[#444746]">
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="p-2 hover:bg-[#f1f3f4] rounded-full transition-colors"
-                            title="Refresh index"
-                        >
-                            <RefreshCw size={15} />
-                        </button>
-                        <button className="p-2 hover:bg-[#f1f3f4] rounded-full transition-colors">
-                            <MoreVertical size={15} />
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            {/* RIGHT SIDE: Pagination Controls & Shared Tools */}
-            <div className="flex items-center gap-2 text-[#444746]">
-                {isHome && (
-                    <div className="flex items-center gap-4 text-xs text-[#5f6368] mr-2">
-                        <span>1–{totalCount} of {totalCount}</span>
-                        <div className="flex items-center gap-1">
-                            <button className="p-1.5 hover:bg-[#f1f3f4] rounded-full opacity-50 cursor-not-allowed">
-                                <ChevronLeft size={16} />
-                            </button>
-                            <button className="p-1.5 hover:bg-[#f1f3f4] rounded-full opacity-50 cursor-not-allowed">
-                                <ChevronRight size={16} />
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {isAudit && (
-                    <div className="flex items-center gap-1 border-r border-[#e0e0e0] pr-3 mr-1">
-                        <button className="p-2 hover:bg-[#f1f3f4] rounded-full transition-colors" title="Share Audit">
-                            <Share2 size={15} />
-                        </button>
-                        <button className="p-2 hover:bg-[#f1f3f4] rounded-full transition-colors" title="Bookmark Node">
-                            <Bookmark size={15} />
-                        </button>
-                    </div>
-                )}
-
-                <button className="p-2 hover:bg-[#f1f3f4] rounded-full transition-colors">
-                    <Settings size={16} />
-                </button>
-            </div>
-        </nav>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-zinc-900 text-zinc-200 text-[11px] border border-zinc-800 px-2.5 py-1.5 rounded-lg shadow-xl ml-3">
+                {label}
+            </TooltipContent>
+        </Tooltip>
     );
 }

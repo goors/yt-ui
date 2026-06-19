@@ -1,0 +1,251 @@
+import type { RequireAtLeastOne } from 'type-fest';
+import { z, ZodError } from 'zod';
+
+import { type FetchioEndpoint } from '../endpoints/types';
+import { removeDoubleSlash } from '../util/stringManipulation';
+import { FetchioEvents } from './types';
+
+import type { FetchioClient, FetchioClientInit } from './types';
+
+export function createFetchio({
+  apiUrl,
+  debug = false,
+  lang = 'en',
+  companyId,
+  handle,
+}: FetchioClientInit): FetchioClient {
+  try {
+    console.debug(`[Fetchio]: create client with logging ${debug ? 'enabled' : 'disabled'}.`);
+    let retriedWithAuth = false;
+
+    const fetchWithDefaults: typeof fetch = async (input, init) => {
+      const headers = {
+        ...init?.headers,
+        //  'Content-Type': 'application/json',
+        'accept-language': lang,
+      };
+
+      if (companyId !== undefined) {
+        (headers as Record<string, string>)['Company-Id'] = companyId;
+      }
+
+      const response = await fetch(input, {
+        ...init,
+        headers,
+        credentials: 'include',
+      });
+
+      if (response.status === 401) {
+        if (!retriedWithAuth) {
+          retriedWithAuth = true;
+          // TODO: refresh token
+          return fetchWithDefaults(input, init);
+        } else {
+          if (handle?.unauthenticated) {
+            if (debug) {
+              console.warn('[Fetchio]: handle unauthenticated.');
+            }
+            handle.unauthenticated({
+              event: FetchioEvents.unauthenticated,
+              message: response.statusText,
+            });
+          }
+          throw new Error(`[Fetchio]: HTTP 401 with ${response.statusText}`);
+        }
+      }
+
+      if (response.status === 403) {
+        if (handle?.unauthorized) {
+          if (debug) {
+            console.warn('[Fetchio]: handle unauthorized.');
+          }
+          handle.unauthorized({ event: FetchioEvents.unauthorized });
+        }
+        throw new Error(`[Fetchio]: access denied.`);
+      }
+
+      if (response.status === 500) {
+        if (handle?.internalError) {
+          if (debug) {
+            console.warn('[Fetchio]: handle internal error.');
+          }
+          handle.internalError({ event: FetchioEvents.internalError, message: response });
+        }
+
+        if ((input as string).indexOf('upload') > -1) {
+          return response;
+        }
+        throw new Error(`[Fetchio]: internal server error`);
+      }
+
+      if (response.status === 404) {
+        if (handle?.internalError) {
+          if (debug) {
+            console.warn('[Fetchio]: handle internal error.');
+          }
+          handle.internalError({ event: FetchioEvents.internalError, message: response });
+        }
+
+        if ((input as string).indexOf('upload') > -1) {
+          return response;
+        }
+        throw new Error(`[Fetchio]: internal server error`);
+      }
+
+      return response;
+    };
+
+    return {
+      apiUrl,
+      options: { debug },
+      authenticated: false,
+      fetchData: fetchWithDefaults,
+    };
+  } catch (error) {
+    if (error instanceof ZodError) {
+      console.error(
+        '[Fetchio]: invalid client configuration.',
+        error,
+        JSON.stringify(error.flatten().fieldErrors, null, 2)
+      );
+    }
+    throw error;
+  }
+}
+const cleanQuery = <T extends object>(query: T): Partial<T> => {
+  return Object.fromEntries(
+    Object.entries(query).filter(([_, v]) => v !== undefined) // eslint-disable-line @typescript-eslint/no-unused-vars
+  ) as Partial<T>;
+};
+
+export async function query<TResponse, TBody = void, TQuery = void>(
+  { fetchData, apiUrl, options }: FetchioClient,
+  endpoint: FetchioEndpoint<TResponse, TBody, TQuery>,
+  data: RequireAtLeastOne<{
+    body: TBody extends void ? never : TBody;
+    param: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    query: TQuery extends void ? never : TQuery;
+  }> | null,
+  signal?: AbortSignal,
+  isPdf = false,
+  isCompleteResponse = false
+): Promise<TResponse> {
+  const {
+    method,
+    url: endpointUrl,
+    responseSchema,
+    requestParamSchema,
+    requestQuerySchema,
+  } = endpoint;
+
+  let requestBodySchema;
+  if (method !== 'GET') {
+    requestBodySchema = endpoint.requestBodySchema;
+  }
+  const validatedBody = requestBodySchema?.parse(data?.body);
+  const validatedParam = requestParamSchema?.parse(data?.param);
+  const validatedQuery = requestQuerySchema?.parse(data?.query);
+
+  try {
+    const fullURL = removeDoubleSlash(`${apiUrl}${endpointUrl}`);
+
+    const urlValidation = z.string().url().safeParse(fullURL);
+    if (!urlValidation.success) {
+      throw new Error(`[Fetchio]: invalid URL: ${fullURL} is not a valid URL`);
+    }
+    const url = new URL(urlValidation.data);
+
+    if (validatedParam) {
+      for (const key in validatedParam) {
+        if (Object.prototype.hasOwnProperty.call(validatedParam, key)) {
+          const encodedPlaceholder = `%7B${key}%7D`;
+          url.pathname = url.pathname.replace(
+            new RegExp(encodedPlaceholder, 'g'),
+            validatedParam[key]
+          );
+        }
+      }
+    }
+
+    if (validatedQuery) {
+      if (Array.isArray(validatedQuery)) {
+        for (const entry of validatedQuery) {
+          for (const [key, value] of Object.entries(entry)) {
+            url.searchParams.append(key, value as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+          }
+        }
+      } else {
+        const q = cleanQuery(validatedQuery);
+        for (const [key, value] of Object.entries(q)) {
+          if (Array.isArray(value)) {
+            for (const item of value) {
+              url.searchParams.append(key, item);
+            }
+          } else {
+            url.searchParams.append(key, value as string);
+          }
+        }
+      }
+    }
+
+    if (options?.debug) {
+      console.log(`[Fetchio]: query ${method}: ${url.toString()} with data`, {
+        body: validatedBody,
+        param: validatedParam,
+        query: validatedQuery,
+      });
+    }
+
+    const headers: Record<string, string> = {};
+
+    if (!(validatedBody instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
+    headers['credentials'] = 'include';
+
+    const response = await fetchData(url.toString(), {
+      method,
+      body: validatedBody
+        ? validatedBody instanceof FormData
+          ? validatedBody
+          : JSON.stringify(validatedBody)
+        : undefined,
+      ...(isPdf ? { responseType: 'arraybuffer' } : {}),
+      signal,
+      headers,
+    });
+
+    if (isPdf) {
+      // Return PDF as blob casted to TResponse
+      return (await response.blob()) as unknown as TResponse;
+    }
+
+    if (isCompleteResponse) {
+      // Return entire response casted to TResponse (usually not recommended, but you control usage)
+      return response as unknown as TResponse;
+    }
+
+    if (!responseSchema) {
+      throw new Error('[Fetchio]: No response schema defined to validate response.');
+    }
+
+    const jsonResponse = await response.json();
+
+    const validatedResponse = responseSchema.parse(jsonResponse);
+
+    if (options?.debug) {
+      console.log(`[Fetchio]: response from ${endpointUrl}`, validatedResponse);
+    }
+
+    return validatedResponse;
+  } catch (error) {
+    if (options?.debug && error instanceof ZodError) {
+      console.error(
+        '[Fetchio]: invalid response schema:',
+        JSON.stringify(error.flatten().fieldErrors, null, 2),
+        error
+      );
+    }
+    throw error;
+  }
+}

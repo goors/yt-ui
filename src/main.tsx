@@ -2,25 +2,50 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router'
 import './index.css'
-import Home from "@/pages/home.tsx";
-import ForensicAudit from "@/pages/audit.tsx";
-import About from "@/pages/about.tsx";
+import {InteractionType, PublicClientApplication} from "@azure/msal-browser";
+import {msalConfig} from "@/auth-config.ts";
+const msalInstance = new PublicClientApplication(msalConfig);
+import {MsalAuthenticationTemplate, MsalProvider} from "@azure/msal-react";
+import { useIsAuthenticated } from "@azure/msal-react";
+import Clients from "@/pages/clients.tsx";
 import Navbar from "@/components/navbar.tsx";
-import Cms from "@/pages/cms.tsx";
-import EditPodcast from "@/pages/edit.tsx";
+import Candidates from "@/pages/candidates.tsx";
+import {QueryClientProvider} from "@tanstack/react-query";
+import {queryClient} from "@/client/query-qlient";
+import {Toaster} from "@/components/ui/sonner.tsx";
+import AddCandidate from "@/pages/add-candidate.tsx";
+
+export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
+    const isAuthenticated = useIsAuthenticated();
+
+    if (!isAuthenticated) {
+        // Redirect to login or show unauthorized
+        return <div>Please log in to continue.</div>;
+    }
+
+    return <>{children}</>;
+};
 
 // 1. Create a Root Layout with the Navbar INSIDE
 const rootRoute = createRootRoute({
     component: () => (
-        <>
-            {/* The Navbar is now inside the Router context! */}
-            {/*<Navbar />*/}
+        <MsalAuthenticationTemplate interactionType={InteractionType.Redirect}>
+            <QueryClientProvider client={queryClient}>
+            {/* Flex container creates the side-by-side layout */}
+                <div className="flex w-full h-screen overflow-hidden">
 
-            {/* This is where your pages (Home, Audit, About) will render */}
-            <main >
-                <Outlet />
-            </main>
-        </>
+                    {/* Fixed-width sidebar */}
+                    <Navbar />
+
+                    {/* Scrollable content area for your table */}
+                    <main className="flex-1 overflow-y-auto bg-zinc-50">
+                        <Toaster />
+                        <Outlet />
+                    </main>
+
+                </div>
+            </QueryClientProvider>
+        </MsalAuthenticationTemplate>
     ),
 })
 
@@ -28,40 +53,28 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: Cms,
+    component: Clients,
 })
-
-const auditRoute = createRoute({
+const candidatesRoute = createRoute({
     getParentRoute: () => rootRoute,
-    path: '/audit/$auditId',
-    component: ForensicAudit,
+    path: '/candidates',
+    component: Candidates,
 })
-
-const aboutRoute = createRoute({
+const addCandidateRoute = createRoute({
     getParentRoute: () => rootRoute,
-    path: '/about',
-    component: About,
-})
-
-const cmsRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: '/cms',
-    component: Cms,
-})
-
-const editRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: '/edit/$auditId',
-    component: EditPodcast,
+    path: '/add-candidate',
+    component: AddCandidate,
 })
 
 // 3. Create the router tree
-const routeTree = rootRoute.addChildren([indexRoute, auditRoute, aboutRoute, editRoute, cmsRoute])
+const routeTree = rootRoute.addChildren([indexRoute, candidatesRoute, addCandidateRoute])
 const router = createRouter({ routeTree })
 
 // 4. Render ONLY the Provider
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
+        <MsalProvider instance={msalInstance}>
         <RouterProvider router={router} />
+        </MsalProvider>
     </React.StrictMode>
 )

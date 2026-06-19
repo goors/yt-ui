@@ -47,13 +47,18 @@
 }
 
 /* Use standard CSS for layout-level resets to avoid circular dependencies */
+html, body, #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    margin: 0;
+}
+
 body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    margin: 0;
     display: flex;
     justify-content: center;
-    min-height: 100vh;
 }
 
 /* Your Window Frame Styles */
