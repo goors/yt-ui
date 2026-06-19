@@ -12,12 +12,14 @@ export interface FetchioClientInit extends FetchioClientOptions {
   apiUrl: string;
   handle?: Partial<FetchioEventHandlers>;
   companyId?: string;
+  getAccessToken: () => Promise<string|null>;
 }
 export interface FetchioClient {
   apiUrl: string;
   options: FetchioClientOptions;
   authenticated: boolean;
   fetchData: (url: URL | RequestInfo, options?: RequestInit) => Promise<Response>;
+  getAccessToken: () => Promise<string>;
 }
 
 export interface FetchioCredentials {

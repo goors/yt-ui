@@ -26,7 +26,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import {formatTime, LABEL_COLORS, LABEL_MAP} from "@/constants/forensics.ts"
+import {formatTime, LABEL_COLORS, LABEL_MAP} from "@/constants/forensics"
 import { useEffect, useMemo, useState } from "react"
 
 const GROUPS = [

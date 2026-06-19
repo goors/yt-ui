@@ -19,21 +19,21 @@ import LinkedinIcon from "@/components/icons/linkedin.tsx";
 import GithubIcon from "@/components/icons/github.tsx";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { candidateUpdateSchema, CandidateUpdateSchema } from "@/validators/candidates/candidate-update.ts";
+import { candidateUpdateSchema, CandidateUpdateSchema } from "@/validators/candidates/candidate-update";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { CandidatesQuery } from "@/validators/candidates/candidates-query.ts";
+import { CandidatesQuery } from "@/validators/candidates/candidates-query";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { candidatesQueryOptions } from "@/queries/candidates/candidates-query-options.ts";
-import { candidatesQueryFiltersOptions } from "@/queries/candidates/candidates-query-filters-options.ts";
+import { candidatesQueryOptions } from "@/queries/candidates/candidates-query-options";
+import { candidatesQueryFiltersOptions } from "@/queries/candidates/candidates-query-filters-options";
 import CandidateSideSheet from "@/components/candidates/info.tsx";
 import { toast } from "sonner";
-import { candidatesUpdatePositionsStatusMutation } from "@/mutations/candidates/candidates-update-mutation.ts";
+import { candidatesUpdatePositionsStatusMutation } from "@/mutations/candidates/candidates-update-mutation";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {IconFileCv} from "@tabler/icons-react";
-import {candidatesCvMutation} from "@/mutations/candidates/candidates-cv-mutation.ts";
+import {candidatesCvMutation} from "@/mutations/candidates/candidates-cv-mutation";
 
 export const CopyableEmail = ({ email }: { email: string }) => {
     const [copied, setCopied] = useState(false);

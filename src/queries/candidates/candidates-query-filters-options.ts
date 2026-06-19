@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
-import {candidatesQueryFiltersMethod} from "@/services/candidate-methods.ts";
+import {candidatesQueryFiltersMethod} from "@/services/candidate-methods";
 export const candidatesQueryFiltersOptions = (
   enabled: boolean,
   signal?: AbortSignal

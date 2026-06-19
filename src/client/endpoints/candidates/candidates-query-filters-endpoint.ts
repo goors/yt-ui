@@ -2,7 +2,7 @@ import type { FetchioEndpoint } from '../types';
 import {
     candidateFiltersQueryResponse,
     CandidateFiltersQueryResponse
-} from "@/validators/candidates/candidates-filter-query-response.ts";
+} from "@/validators/candidates/candidates-filter-query-response";
 
 const candidatesQueryFiltersEndpoint: FetchioEndpoint<CandidateFiltersQueryResponse, void, void> = {
   method: 'GET',

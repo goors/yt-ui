@@ -1,5 +1,5 @@
 import {query} from "@/client/core";
-import {client} from "@/client/api-client";
+import {getClient} from "@/client/api-client";
 import {CandidatePositionStatusUpdate} from "@/validators/candidates/candidates-position-status-update";
 import {
     candidatesUpdatePositionStatusEndpoint
@@ -9,11 +9,11 @@ import {candidatesQueryEndpoint} from "@/client/endpoints/candidates/candidates-
 import {candidatesQueryFiltersEndpoint} from "@/client/endpoints/candidates/candidates-query-filters-endpoint";
 import {CandidateUpdateSchema} from "@/validators/candidates/candidate-update";
 import {candidatesUpdateEndpoint} from "@/client/endpoints/candidates/candidates-update-endpoint";
-import {CandidateAdd} from "@/validators/candidates/candidate-add.ts";
-import {candidatesCreateEndpoint} from "@/client/endpoints/candidates/candidates-create-endpoint.ts";
-import {candidatesCvEndpoint} from "@/client/endpoints/candidates/candidates-cv-endpoint.ts";
+import {CandidateAdd} from "@/validators/candidates/candidate-add";
+import {candidatesCreateEndpoint} from "@/client/endpoints/candidates/candidates-create-endpoint";
+import {candidatesCvEndpoint} from "@/client/endpoints/candidates/candidates-cv-endpoint";
 
-
+const client = getClient()
 const candidateUpdatePositionStatusMethod = async (id: string, position_id: string, model: CandidatePositionStatusUpdate) => {
     return query(client, candidatesUpdatePositionStatusEndpoint, { param: {id, position_id}, body: model });
 }

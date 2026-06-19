@@ -1,25 +1,48 @@
 import { createFetchio, type FetchioClient } from './core';
+import { msalInstance } from "@/main.tsx";
 
-let client: FetchioClient;
+// Export a placeholder or null, and initialize it later
+let client: FetchioClient | null = null;
 
-function initializeClient() {
-  const companyId: string | undefined = undefined;
-  client = createFetchio({
-    apiUrl: import.meta.env.VITE_API_URL,
-    debug: import.meta.env.VITE_CLIENT_DEBUG,
-    lang: 'en-US',
-    companyId,
-    handle: {
-      unauthenticated: () => {},
-      internalError: (_payload) => {
-        return _payload.message;
-      },
-    },
-  });
-}
+const getAuthToken = async (): Promise<string | null> => {
+    // 1. Dynamic import of the instance
+    const { msalInstance } = await import("@/main.tsx");
 
-initializeClient();
+    // 2. Do NOT use getActiveAccount() - it's too finicky.
+    // Use getAllAccounts() - if this array has stuff, the user is logged in.
+    const allAccounts = msalInstance.getAllAccounts();
+    const account = allAccounts[0];
 
-const reInitializeClient = initializeClient;
+    if (!account) {
+        console.warn("No account found in MSAL cache.");
+        return null;
+    }
 
-export { client, reInitializeClient };
+    try {
+        const response = await msalInstance.acquireTokenSilent({
+            scopes: ["api://dd6e6c34-5086-490d-8aac-5b501d6ccd8d/access_as_user"],
+            account: account
+        });
+        return response.accessToken;
+    } catch (error) {
+        console.error("Silent token acquisition failed:", error);
+        return null;
+    }
+};
+
+// Now exported as a function, not a variable
+export const getClient = (): FetchioClient => {
+    if (!client) {
+        client = createFetchio({
+            apiUrl: import.meta.env.VITE_API_URL,
+            debug: import.meta.env.VITE_CLIENT_DEBUG === 'true',
+            lang: 'en-US',
+            getAccessToken: getAuthToken,
+            handle: {
+                unauthenticated: () => {},
+                internalError: (_payload) => { return _payload.message; },
+            },
+        });
+    }
+    return client;
+};

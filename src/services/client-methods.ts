@@ -1,7 +1,7 @@
 import {clientsQueryEndpoint} from "@/client/endpoints/clients/clients-query-endpoint";
 import {ClientsQuery} from "@/validators/clients/clients-query";
 import {query} from "@/client/core";
-import {client} from "@/client/api-client";
+import {getClient} from "@/client/api-client";
 import {ClientPosition, ClientsModel} from "@/validators/clients/client-add";
 import {clientsCreateEndpoint} from "@/client/endpoints/clients/clients-create-endpoint";
 import {clientsUpdateEndpoint} from "@/client/endpoints/clients/clients-update-endpoint";
@@ -9,7 +9,7 @@ import {clientsCreatePositionEndpoint} from "@/client/endpoints/clients/clients-
 import {clientsPositionsQueryEndpoint} from "@/client/endpoints/clients/clients-positions-query-endpoint";
 import {clientsUpdatePositionEndpoint} from "@/client/endpoints/clients/clients-update-position-endpoint";
 
-
+const client = getClient()
 const clientsQueryMethod = async (queryModel: ClientsQuery, signal?: AbortSignal) => {
   return query(client, clientsQueryEndpoint, { query: queryModel }, signal);
 };

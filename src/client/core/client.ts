@@ -13,21 +13,34 @@ export function createFetchio({
   lang = 'en',
   companyId,
   handle,
+  getAccessToken,
 }: FetchioClientInit): FetchioClient {
   try {
     console.debug(`[Fetchio]: create client with logging ${debug ? 'enabled' : 'disabled'}.`);
     let retriedWithAuth = false;
 
     const fetchWithDefaults: typeof fetch = async (input, init) => {
-      const headers = {
-        ...init?.headers,
-        //  'Content-Type': 'application/json',
-        'accept-language': lang,
-      };
+        const headers = new Headers(init?.headers);
+        headers.set('accept-language', lang);
+        headers.set('Content-Type', 'application/json');
 
-      if (companyId !== undefined) {
-        (headers as Record<string, string>)['Company-Id'] = companyId;
-      }
+        // 2. ONLY call if it exists
+        if (getAccessToken) {
+            try {
+                const token = await getAccessToken();
+                console.log("Token retrieved:", token); // Keep this for debugging
+                if (token) {
+                    headers.set('Authorization', `Bearer ${token}`);
+                }
+            } catch (err) {
+                console.error("[Fetchio]: Error getting token:", err);
+                // If token fails, you might want to continue or throw
+            }
+        }
+
+        if (companyId !== undefined) {
+            headers.set('Company-Id', companyId);
+        }
 
       const response = await fetch(input, {
         ...init,

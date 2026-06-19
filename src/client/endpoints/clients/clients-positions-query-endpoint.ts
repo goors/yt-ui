@@ -4,7 +4,7 @@ import {requestParamSchema} from "@/client/validators";
 import {
     clientsPositionsQueryResponse,
     ClientsPositionsQueryResponse
-} from "@/validators/clients/clients-position-query-response.ts";
+} from "@/validators/clients/clients-position-query-response";
 
 const clientsPositionsQueryEndpoint: FetchioEndpoint<ClientsPositionsQueryResponse, void, ClientsQuery> = {
   method: 'GET',

@@ -4,7 +4,7 @@ import LinkedinIcon from "@/components/icons/linkedin.tsx";
 import GithubIcon from "@/components/icons/github.tsx";
 import {CopyableEmail} from "@/pages/candidates.tsx";
 import {IconGraph} from "@tabler/icons-react";
-import {CandidatePositionStatusUpdate} from "@/validators/candidates/candidates-position-status-update.ts";
+import {CandidatePositionStatusUpdate} from "@/validators/candidates/candidates-position-status-update";
 import {Spinner} from "@/components/ui/spinner.tsx";
 
 export const statuses = [

@@ -1,5 +1,5 @@
 import z from "zod";
-import {clientPositionCountry} from "@/validators/clients/client-add.ts";
+import {clientPositionCountry} from "@/validators/clients/client-add";
 
 export const clientPositionQueryResponse = z.object({
     id: z.string(),

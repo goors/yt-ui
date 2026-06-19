@@ -50,14 +50,14 @@ import { clientsUpdatePositionsMutation } from "@/mutations/clients/clients-upda
 import { CandidateTable, statuses } from "@/components/candidates/consider-table.tsx";
 import {
     candidatesUpdatePositionsStatusMutation
-} from "@/mutations/candidates/candidates-update-position-status-mutation.ts";
-import { CandidatePositionStatusUpdate } from "@/validators/candidates/candidates-position-status-update.ts";
+} from "@/mutations/candidates/candidates-update-position-status-mutation";
+import { CandidatePositionStatusUpdate } from "@/validators/candidates/candidates-position-status-update";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Summary } from "@/components/candidates/summary.tsx";
 import {IconFileCv, IconReload} from "@tabler/icons-react";
-import {candidatesCvMutation} from "@/mutations/candidates/candidates-cv-mutation.ts";
+import {candidatesCvMutation} from "@/mutations/candidates/candidates-cv-mutation";
 
 interface DroppableColumnProps {
     id: string;

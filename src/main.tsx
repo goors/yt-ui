@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom/client'
 import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router'
 import './index.css'
 import {InteractionType, PublicClientApplication} from "@azure/msal-browser";
-import {msalConfig} from "@/auth-config.ts";
-const msalInstance = new PublicClientApplication(msalConfig);
+import {msalConfig} from "@/auth-config";
+export const msalInstance = new PublicClientApplication(msalConfig);
 import {MsalAuthenticationTemplate, MsalProvider} from "@azure/msal-react";
 import { useIsAuthenticated } from "@azure/msal-react";
 import Clients from "@/pages/clients.tsx";

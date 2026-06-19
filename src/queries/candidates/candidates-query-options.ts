@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
-import {CandidatesQuery} from "@/validators/candidates/candidates-query.ts";
-import {candidatesQueryMethod} from "@/services/candidate-methods.ts";
+import {CandidatesQuery} from "@/validators/candidates/candidates-query";
+import {candidatesQueryMethod} from "@/services/candidate-methods";
 export const candidatesQueryOptions = (
   enabled: boolean,
   where: string,

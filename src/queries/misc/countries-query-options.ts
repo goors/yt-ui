@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
-import {CountriesQuery} from "@/validators/misc/countries-query.ts";
-import {countriesQueryMethod} from "@/services/misc-methods.ts";
+import {CountriesQuery} from "@/validators/misc/countries-query";
+import {countriesQueryMethod} from "@/services/misc-methods";
 export const countriesQueryOptions = (
   enabled: boolean,
   query: CountriesQuery,
