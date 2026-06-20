@@ -16,7 +16,7 @@ jobs:
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u pregmatch --password-stdin
           docker build \
-            --build-arg VITE_API_URL="https://yt.api.pregmatch.org" \
+            --build-arg VITE_API_URL="https://yt.api.pregmatch.org/api" \
             -t pregmatch/shiny-flake:yt-ui-${{ github.sha }} \
             -t pregmatch/shiny-flake:yt-ui-latest \
             -f Dockerfile.ui .
