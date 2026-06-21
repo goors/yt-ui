@@ -8,6 +8,7 @@ import {clientsUpdateEndpoint} from "@/client/endpoints/clients/clients-update-e
 import {clientsCreatePositionEndpoint} from "@/client/endpoints/clients/clients-create-position-endpoint";
 import {clientsPositionsQueryEndpoint} from "@/client/endpoints/clients/clients-positions-query-endpoint";
 import {clientsUpdatePositionEndpoint} from "@/client/endpoints/clients/clients-update-position-endpoint";
+import {clientsPositionsQueryJobsEndpoint} from "@/client/endpoints/clients/clients-positions-query-jobs-endpoint";
 
 const client = getClient()
 const clientsQueryMethod = async (queryModel: ClientsQuery, signal?: AbortSignal) => {
@@ -31,6 +32,10 @@ const clientsUpdatePositionMethod = async (id: string, position_id: string, mode
     return query(client, clientsUpdatePositionEndpoint, { param: {id, position_id}, body: model });
 }
 
+const clientsPositionsJobsQueryMethod = async (id: string, position_id: string) => {
+    return query(client, clientsPositionsQueryJobsEndpoint, { param: {id, position_id} });
+}
+
 const clientsCreatePositionMethod = async (id: string, model: ClientPosition) => {
     return query(client, clientsCreatePositionEndpoint, { param: {id}, body: model });
 }
@@ -42,6 +47,7 @@ export {
     clientsUpdateMethod,
     clientsCreatePositionMethod,
     clientsPositionsQueryMethod,
-    clientsUpdatePositionMethod
+    clientsUpdatePositionMethod,
+    clientsPositionsJobsQueryMethod
 
 };

@@ -28,12 +28,12 @@ export function createFetchio({
         if (getAccessToken) {
             try {
                 const token = await getAccessToken();
-                console.log("Token retrieved:", token); // Keep this for debugging
+                // console.log("Token retrieved:", token); // Keep this for debugging
                 if (token) {
                     headers.set('Authorization', `Bearer ${token}`);
                 }
             } catch (err) {
-                console.error("[Fetchio]: Error getting token:", err);
+                // console.error("[Fetchio]: Error getting token:", err);
                 // If token fails, you might want to continue or throw
             }
         }

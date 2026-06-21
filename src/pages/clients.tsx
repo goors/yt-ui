@@ -26,7 +26,7 @@ import {
     useSensor,
     useSensors
 } from "@dnd-kit/core";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import {useMutation, useQueries, useQuery} from "@tanstack/react-query";
 import { countriesQueryOptions } from "@/queries/misc/countries-query-options";
 import { ClientsQuery } from "@/validators/clients/clients-query";
 import { CountriesQuery } from "@/validators/misc/countries-query";
@@ -58,6 +58,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Summary } from "@/components/candidates/summary.tsx";
 import {IconFileCv, IconReload} from "@tabler/icons-react";
 import {candidatesCvMutation} from "@/mutations/candidates/candidates-cv-mutation";
+import {clientsPositionsJobsQueryOptions} from "@/queries/clients/clients-positions-jobs-query-options";
 
 interface DroppableColumnProps {
     id: string;
@@ -493,6 +494,84 @@ export default function Clients() {
         refetch: refetchClientsPositions,
     } = useQuery(clientsPositionsQueryOptions(activeId !== null, clientsPositionsQuery, activeId ?? ""));
 
+    const jobsQueries = useQueries({
+        queries: clientsPositionsQueryData
+            ? clientsPositionsQueryData.map((pos) => {
+                const baseOptions = clientsPositionsJobsQueryOptions(
+                    !!activeId,
+                    activeId ?? "",
+                    pos.id
+                );
+
+                return {
+                    ...baseOptions,
+                    refetchInterval: (query) => {
+                        const data = query.state.data;
+
+                        // 1. If data is undefined (loading/no initial response), poll every 2 seconds
+                        if (data === undefined) {
+                            return 2000;
+                        }
+
+                        // 2. If data is explicitly null, return true (polls at the default/fastest interval)
+                        if (data === null) {
+                            return true;
+                        }
+
+                        // 3. If data is an empty array, return true (polls at the default/fastest interval)
+                        if (Array.isArray(data) && data.length === 0) {
+                            return true;
+                        }
+
+                        // 4. If it's a populated array or object, check if status is 'completed'
+                        const isCompleted = Array.isArray(data)
+                            ? data.some(job => job?.status === 'completed')
+                            : data?.status === 'completed';
+
+                        void refetchClientsPositions();
+                        // 5. Stop polling if completed, otherwise keep polling every 2 seconds
+                        return isCompleted ? false : 2000;
+                    }
+                };
+            })
+            : [],
+    });
+
+
+    const [jobs, setJobs] = useState({});
+
+    useEffect(() => {
+        if (jobsQueries) {
+            const allJobsData = jobsQueries.map((query) => query.data);
+
+            // 1. Create a local temporary object to batch the updates
+            const nextJobs = {};
+            let hasData = false;
+
+            for (const rec of allJobsData) {
+                if (Array.isArray(rec) && rec.length > 0) {
+                    const job = rec[0];
+
+                    // 2. Assign keys directly to our temporary object
+                    nextJobs[job.position_id] = {
+                        phase: job.phase,
+                        status: job.status
+                    };
+                    hasData = true;
+                }
+            }
+
+            // 3. Call setJobs EXACTLY ONCE outside the loop, only if we found data
+            if (hasData) {
+                setJobs((prevJobs) => ({
+                    ...prevJobs,
+                    ...nextJobs // Merges all positions at the exact same time
+                }));
+            }
+        }
+// 4. Use stringified data comparison to avoid reference-triggering on jobsQueries
+    }, [JSON.stringify(jobsQueries.map(q => q.data))]);
+
     useEffect(() => {
         if (countriesQueryData) {
             setCountries(countriesQueryData);
@@ -548,7 +627,7 @@ export default function Clients() {
             {
                 onSuccess: () => {
                     toast.success(`Position created ${data.name}.`);
-                    void refetchClients();
+                    void refetchClientsPositions();
                 },
                 onError: () => {
                     toast.error("Position create error.");
@@ -595,7 +674,7 @@ export default function Clients() {
         );
     };
 
-    const [activeCandidateId, setActiveCandidateId] = useState<string | null>(null);
+    const [potentialCandidates, setPotentialCandidates] = useState<string | null>(null);
     const [activeDragCandidateId, setActiveDragCandidateId] = useState<string | null>(null);
     const [showCandidates, setShowCandidates] = useState<any | null>(null);
 
@@ -886,6 +965,29 @@ export default function Clients() {
                                                 </div>
 
                                                 <div className="flex gap-2 items-center">
+                                                    {/* Dynamic Job Status Badge */}
+                                                    {jobs[p.id] && (
+                                                        <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold uppercase shadow-sm tracking-wider mr-1 transition-all ${
+                                                            jobs[p.id].status === 'completed'
+                                                                ? 'bg-emerald-50/40 border-emerald-200 text-emerald-700'
+                                                                : 'bg-indigo-50/30 border-indigo-100 text-indigo-600'
+                                                        }`}>
+                                                            {/* Spinning/Pulse indicator icon for active work vs static dot for completed */}
+                                                            {jobs[p.id].status !== 'completed' ? (
+                                                                <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-500"></span>
+                </span>
+                                                            ) : (
+                                                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                                            )}
+
+                                                            <span>
+                {jobs[p.id].phase || jobs[p.id].status}
+            </span>
+                                                        </div>
+                                                    )}
+
                                                     <button
                                                         onClick={() => editPosition(p)}
                                                         className="text-[10px] uppercase font-bold text-zinc-500 hover:text-indigo-650 border border-zinc-200 hover:border-indigo-100 px-3 py-1.5 rounded-lg bg-white transition-all shadow-sm hover:bg-indigo-50/20 cursor-pointer"
@@ -894,7 +996,7 @@ export default function Clients() {
                                                     </button>
 
                                                     <button
-                                                        onClick={() => setActiveCandidateId(p.id)}
+                                                        onClick={() => setPotentialCandidates(p.id)}
                                                         className="flex items-center gap-2 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-755 text-[10px] font-bold uppercase rounded-lg hover:border-zinc-950 hover:bg-zinc-50 hover:text-zinc-955 transition-all shadow-sm cursor-pointer"
                                                     >
                                                         Potential
@@ -1107,12 +1209,12 @@ export default function Clients() {
 
             {/* Possible Candidates Table Sheet */}
             <Sheet
-                open={activeCandidateId !== null}
-                onOpenChange={(open) => !open && setActiveCandidateId(null)}
+                open={potentialCandidates !== null}
+                onOpenChange={(open) => !open && setPotentialCandidates(null)}
             >
                 <SheetContent side="right" className="w-full sm:max-w-4xl p-0 border-l border-zinc-200/80 shadow-2xl bg-white">
-                    {activeCandidateId !== null && (() => {
-                        const activePos = clientsPositionsQueryData?.find(x => x.id === activeCandidateId);
+                    {potentialCandidates !== null && (() => {
+                        const activePos = clientsPositionsQueryData?.find(x => x.id === potentialCandidates);
                         const candidatesForPos = activePos?.potentialCandidates || [];
 
                         return (
@@ -1145,7 +1247,7 @@ export default function Clients() {
                                             candidates={candidatesForPos}
                                             onStatusChange={handleStatusUpdate}
                                             onCrawl={onCrawl}
-                                            position_id={activeCandidateId}
+                                            position_id={potentialCandidates}
                                             isPendingCandidatePositionUpdate={isPendingCandidatePositionUpdate}
                                         />
                                     ) : (
