@@ -5,6 +5,11 @@ export const candidateResponse = z.object({
     id: z.string(),
     name: z.string(),
     country: z.string().nullable().optional(),
+    countryObject: z.object({
+        id: z.string(),
+        name: z.string()
+    }).nullable(),
+
     score: z.number().nullable().optional(),
     source: z.string().nullable().optional(),
     link: z.string().url().nullable().optional(),

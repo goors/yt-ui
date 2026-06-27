@@ -22,7 +22,11 @@ export function createFetchio({
     const fetchWithDefaults: typeof fetch = async (input, init) => {
         const headers = new Headers(init?.headers);
         headers.set('accept-language', lang);
-        headers.set('Content-Type', 'application/json');
+
+        // --- FIX: Only default to JSON if it's NOT a FormData request ---
+        if (!(init?.body instanceof FormData)) {
+            headers.set('Content-Type', 'application/json');
+        }
 
         // 2. ONLY call if it exists
         if (getAccessToken) {
@@ -201,17 +205,36 @@ export async function query<TResponse, TBody = void, TQuery = void>(
       }
     }
 
-    if (options?.debug) {
-      console.log(`[Fetchio]: query ${method}: ${url.toString()} with data`, {
-        body: validatedBody,
-        param: validatedParam,
-        query: validatedQuery,
-      });
-    }
+      if (options?.debug) {
+          // 1. Process the body if it's an instance of FormData
+          let loggedBody = validatedBody;
+
+          if (validatedBody instanceof FormData) {
+              const dataObj = {};
+              validatedBody.forEach((value, key) => {
+                  if (value instanceof File) {
+                      // If it's a file/CV, log its info instead of [object File]
+                      dataObj[key] = `[File: ${value.name} (${(value.size / 1024).toFixed(2)} KB)]`;
+                  } else {
+                      dataObj[key] = value;
+                  }
+              });
+              loggedBody = dataObj;
+          }
+
+          // 2. Print everything out cleanly
+          console.log(`[Fetchio]: query ${method}: ${url.toString()} with data`, {
+              body: loggedBody,
+              param: validatedParam,
+              query: validatedQuery,
+          });
+      }
 
     const headers: Record<string, string> = {};
 
+
     if (!(validatedBody instanceof FormData)) {
+
       headers['Content-Type'] = 'application/json';
     }
     headers['credentials'] = 'include';

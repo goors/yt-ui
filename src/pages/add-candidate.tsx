@@ -28,8 +28,8 @@ import { cn } from "@/lib/utils";
 // Local Zod validation schema for form field state validation
 const formSchema = z.object({
     name: z.string().min(1, "Name is required"),
-    email: z.string().email("Invalid email address").min(1, "Email is required"),
-    link: z.string().url("Invalid URL").or(z.literal("")).optional(),
+    email: z.email("Invalid email address").min(1, "Email is required"),
+    link: z.url("Invalid URL").or(z.literal("")).optional(),
     country: z.object({
         name: z.string().min(1, "Country name is required"),
         id: z.string().min(1, "Country ID is required"),
@@ -96,7 +96,7 @@ export default function AddCandidate() {
         const formData = new FormData();
         formData.append("name", values.name);
         formData.append("email", values.email);
-        formData.append("snippet", values.snippet);
+        formData.append("snippet", values.snippet ?? "");
         formData.append("link", values.link || "");
         
         // Append country object details for standard parsing frameworks

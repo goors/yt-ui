@@ -34,6 +34,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {IconFileCv} from "@tabler/icons-react";
 import {candidatesCvMutation} from "@/mutations/candidates/candidates-cv-mutation";
+import CandidateEditSideSheet from "@/components/candidates/edit.tsx";
 
 export const CopyableEmail = ({ email }: { email: string }) => {
     const [copied, setCopied] = useState(false);
@@ -97,99 +98,6 @@ export default function Candidates() {
         refetch: refetchCandidates,
     } = useQuery(candidatesQueryOptions(true, "pag", candidatesQuery));
 
-
-    const {
-        register,
-        handleSubmit,
-        setValue,
-        watch,
-        formState: { errors },
-        reset,
-    } = useForm<CandidateUpdateSchema>({
-        resolver: zodResolver(candidateUpdateSchema),
-
-    });
-
-    // const form = useForm<CandidateUpdateSchema>({
-    //     resolver: zodResolver(candidateUpdateSchema),
-    // });
-
-    // Sync form values when editingCandidate changes
-    useEffect(() => {
-        if (editingCandidate) {
-            reset({
-                link: editingCandidate.link || "",
-                email: editingCandidate.email || "",
-                title: editingCandidate.name || editingCandidate.snippet || "",
-            });
-        }
-    }, [editingCandidate]);
-
-    const { isPending: isPendingUpdate, mutateAsync: updateMutationMutateAsync } =
-        useMutation(candidatesUpdatePositionsStatusMutation);
-
-    const onSubmit = async (data: CandidateUpdateSchema): Promise<void> => {
-
-        const formData = new FormData();
-
-        // Append text fields
-        formData.append("title", data.title);
-        formData.append("email", data.email);
-        formData.append("link", data.link);
-
-        // Append the file if a new one is selected
-        if (data.cv instanceof File) {
-            formData.append("cv", data.cv);
-        }
-
-        await updateMutationMutateAsync(
-            { id: editingCandidate.id ?? "", data: formData },
-            {
-                onSuccess: () => {
-                    toast.success(`Candidate updated.`);
-                    void refetchCandidates();
-                    setEditingCandidate(null);
-                },
-                onError: () => {
-                    toast.error("Candidate update error.");
-                },
-            }
-        );
-    };
-
-    const [cvFile, setCvFile] = useState<File | null>(null);
-
-    const [dragActive, setDragActive] = useState(false);
-
-    const handleDrag = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.type === "dragenter" || e.type === "dragover") {
-            setDragActive(true);
-        } else if (e.type === "dragleave") {
-            setDragActive(false);
-        }
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragActive(false);
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            const file = e.dataTransfer.files[0];
-            setCvFile(file);
-            setValue("cv", file, { shouldValidate: true });
-        }
-    };
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            setCvFile(file);
-            setValue("cv", file, { shouldValidate: true });
-        }
-    };
-
     const { isPending: isPendingDownloadCv, mutateAsync: candidatesCvMutationMutateAsync } =
         useMutation(candidatesCvMutation);
 
@@ -241,7 +149,7 @@ export default function Candidates() {
                                     className="border border-zinc-200 rounded-xl pl-3 pr-8 py-2 text-xs w-52 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-zinc-50/50 hover:bg-zinc-50 focus:bg-white placeholder:text-zinc-400"
                                     onChange={(e) => {
                                         const val = e.target.value;
-                                        setCandidatesQuerySearch({ text: val, maxItemCount: 6 });
+                                        setCandidatesQuerySearch({ text: val, maxItemCount: 6, source: candidatesQuery.source, country: candidatesQuery.country });
                                     }}
                                     value={candidatesQuerySearch.text || ""}
                                 />
@@ -249,7 +157,7 @@ export default function Candidates() {
                                     <button
                                         className="absolute right-2.5 top-2.5 text-zinc-400 hover:text-zinc-800 transition-colors text-xs cursor-pointer"
                                         onClick={() => {
-                                            setCandidatesQuerySearch(prev => ({ ...prev, text: '', maxItemCount: 6 }));
+                                            setCandidatesQuerySearch(prev => ({ maxItemCount: 6 }));
                                         }}
                                     >
                                         ✕
@@ -265,7 +173,7 @@ export default function Candidates() {
                                                 className="flex items-center gap-3.5 px-4 py-3 hover:bg-zinc-50/80 cursor-pointer transition-colors"
                                                 onClick={() => {
                                                     setSelectedCandidate(c);
-                                                    setCandidatesQuerySearch(prev => ({ ...prev, text: '', maxItemCount: 6 }));
+                                                    setCandidatesQuerySearch(prev => ({ maxItemCount: 6 }));
                                                 }}
                                             >
                                                 {c.data?.avatar ? (
@@ -289,7 +197,11 @@ export default function Candidates() {
                                                     </div>
                                                     <div className="flex items-center gap-2 text-[10px] text-zinc-500">
                                                         <span>Score: <strong className="text-zinc-800 font-semibold">{(c.score * 100).toFixed(1)}%</strong></span>
-                                                        {c.country && <span>• {c.country}</span>}
+                                                        {c.countryObject?.name ? (
+                                                            <span>• {c.countryObject.name}</span>
+                                                        ) : c.country ? (
+                                                            <span>• {c.country}</span>
+                                                        ) : null}
                                                     </div>
                                                     {c.text_found && (
                                                         <p
@@ -472,8 +384,17 @@ export default function Candidates() {
                                     {/* Country */}
                                     <td className="py-4 px-6 text-zinc-650">
                                         <span className="flex items-center gap-2 font-semibold">
-                                            <Flag size={12} className="text-zinc-400" />
-                                            {c.country}
+                                            <Flag
+                                                size={12}
+                                                className={c.countryObject ? "text-emerald-600" : "text-zinc-400"}
+                                                fill={c.countryObject ? "currentColor" : "none"}
+                                            />
+
+                                            {c.countryObject?.name ? (
+                                                <span>• {c.countryObject.name}</span>
+                                            ) : c.country ? (
+                                                <span>• {c.country}</span>
+                                            ) : null}
                                         </span>
                                     </td>
 
@@ -519,87 +440,92 @@ export default function Candidates() {
                 onClose={() => setSelectedCandidate(null)}
             />
 
+            <CandidateEditSideSheet
+                selectedCandidate={editingCandidate}
+                setSelectedCandidate={setEditingCandidate}
+                refetchCandidates={refetchCandidates}
+            />
             {/* Editing candidates sheet */}
-            <Sheet open={!!editingCandidate} onOpenChange={(open) => !open && setEditingCandidate(null)}>
-                <SheetContent side="right" className="w-full sm:max-w-xl p-0 border-l border-zinc-200/80 shadow-2xl bg-white">
-                    <div className="flex flex-col h-full bg-white">
-                        {/* Header */}
-                        <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50/50 px-8 py-5">
-                            <SheetTitle className="text-sm font-bold uppercase tracking-wider text-zinc-800">
-                                Update Candidate Dossier
-                            </SheetTitle>
-                        </div>
+            {/*<Sheet open={!!editingCandidate} onOpenChange={(open) => !open && setEditingCandidate(null)}>*/}
+            {/*    <SheetContent side="right" className="w-full sm:max-w-xl p-0 border-l border-zinc-200/80 shadow-2xl bg-white">*/}
+            {/*        <div className="flex flex-col h-full bg-white">*/}
+            {/*            /!* Header *!/*/}
+            {/*            <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50/50 px-8 py-5">*/}
+            {/*                <SheetTitle className="text-sm font-bold uppercase tracking-wider text-zinc-800">*/}
+            {/*                    Update Candidate Dossier*/}
+            {/*                </SheetTitle>*/}
+            {/*            </div>*/}
 
-                        {/* Content Form */}
-                        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Profile Name/Title</label>
-                                <input
-                                    {...register("title")}
-                                    className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-xs outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-zinc-50/30 hover:bg-zinc-50/80 focus:bg-white"
-                                    placeholder="Candidate name or profile title..."
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Profile Link</label>
-                                <input
-                                    {...register("link")}
-                                    className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-xs outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-zinc-50/30 hover:bg-zinc-50/80 focus:bg-white"
-                                    placeholder="LinkedIn or GitHub link..."
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Email Address</label>
-                                <input
-                                    {...register("email")}
-                                    className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-xs outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-zinc-50/30 hover:bg-zinc-50/80 focus:bg-white"
-                                    placeholder="email@example.com"
-                                />
-                            </div>
+            {/*            /!* Content Form *!/*/}
+            {/*            <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto px-8 py-6 space-y-6">*/}
+            {/*                <div className="space-y-1.5">*/}
+            {/*                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Profile Name/Title</label>*/}
+            {/*                    <input*/}
+            {/*                        {...register("title")}*/}
+            {/*                        className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-xs outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-zinc-50/30 hover:bg-zinc-50/80 focus:bg-white"*/}
+            {/*                        placeholder="Candidate name or profile title..."*/}
+            {/*                    />*/}
+            {/*                </div>*/}
+            {/*                <div className="space-y-1.5">*/}
+            {/*                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Profile Link</label>*/}
+            {/*                    <input*/}
+            {/*                        {...register("link")}*/}
+            {/*                        className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-xs outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-zinc-50/30 hover:bg-zinc-50/80 focus:bg-white"*/}
+            {/*                        placeholder="LinkedIn or GitHub link..."*/}
+            {/*                    />*/}
+            {/*                </div>*/}
+            {/*                <div className="space-y-1.5">*/}
+            {/*                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Email Address</label>*/}
+            {/*                    <input*/}
+            {/*                        {...register("email")}*/}
+            {/*                        className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-xs outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-zinc-50/30 hover:bg-zinc-50/80 focus:bg-white"*/}
+            {/*                        placeholder="email@example.com"*/}
+            {/*                    />*/}
+            {/*                </div>*/}
 
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Update CV</label>
-                                <div
-                                    className={cn(
-                                        "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer",
-                                        cvFile ? "border-emerald-300 bg-emerald-50" : "border-zinc-200"
-                                    )}
-                                    onDrop={handleDrop}
-                                    onDragOver={(e) => e.preventDefault()}
-                                >
-                                    <input
-                                        type="file"
-                                        className="hidden"
-                                        id="cv-upload"
-                                        onChange={handleFileChange}
-                                    />
-                                    <label htmlFor="cv-upload" className="text-xs font-bold uppercase text-zinc-600">
-                                        {cvFile ? cvFile.name : "Click or Drop to Replace CV"}
-                                    </label>
-                                </div>
-                            </div>
-                        </form>
+            {/*                <div className="space-y-1.5">*/}
+            {/*                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Update CV</label>*/}
+            {/*                    <div*/}
+            {/*                        className={cn(*/}
+            {/*                            "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer",*/}
+            {/*                            cvFile ? "border-emerald-300 bg-emerald-50" : "border-zinc-200"*/}
+            {/*                        )}*/}
+            {/*                        onDrop={handleDrop}*/}
+            {/*                        onDragOver={(e) => e.preventDefault()}*/}
+            {/*                    >*/}
+            {/*                        <input*/}
+            {/*                            type="file"*/}
+            {/*                            className="hidden"*/}
+            {/*                            id="cv-upload"*/}
+            {/*                            onChange={handleFileChange}*/}
+            {/*                        />*/}
+            {/*                        <label htmlFor="cv-upload" className="text-xs font-bold uppercase text-zinc-600">*/}
+            {/*                            {cvFile ? cvFile.name : "Click or Drop to Replace CV"}*/}
+            {/*                        </label>*/}
+            {/*                    </div>*/}
+            {/*                </div>*/}
+            {/*            </form>*/}
 
-                        {/* Footer Controls */}
-                        <div className="border-t border-zinc-200 bg-zinc-50 px-8 py-4 flex gap-2">
-                            <button
-                                disabled={isPendingUpdate}
-                                onClick={handleSubmit(onSubmit)}
-                                className="h-10 w-full rounded-xl bg-zinc-950 text-white text-xs font-bold uppercase hover:bg-zinc-850 transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                            >
-                                {isPendingUpdate && <Spinner className="w-3.5 h-3.5" />} Confirm & Save
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setEditingCandidate(null)}
-                                className="h-10 px-6 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-xs font-bold uppercase hover:bg-zinc-50 transition-all active:scale-98 cursor-pointer"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </SheetContent>
-            </Sheet>
+            {/*            /!* Footer Controls *!/*/}
+            {/*            <div className="border-t border-zinc-200 bg-zinc-50 px-8 py-4 flex gap-2">*/}
+            {/*                <button*/}
+            {/*                    disabled={isPendingUpdate}*/}
+            {/*                    onClick={handleSubmit(onSubmit)}*/}
+            {/*                    className="h-10 w-full rounded-xl bg-zinc-950 text-white text-xs font-bold uppercase hover:bg-zinc-850 transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer shadow-sm"*/}
+            {/*                >*/}
+            {/*                    {isPendingUpdate && <Spinner className="w-3.5 h-3.5" />} Confirm & Save*/}
+            {/*                </button>*/}
+            {/*                <button*/}
+            {/*                    type="button"*/}
+            {/*                    onClick={() => setEditingCandidate(null)}*/}
+            {/*                    className="h-10 px-6 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-xs font-bold uppercase hover:bg-zinc-50 transition-all active:scale-98 cursor-pointer"*/}
+            {/*                >*/}
+            {/*                    Cancel*/}
+            {/*                </button>*/}
+            {/*            </div>*/}
+            {/*        </div>*/}
+            {/*    </SheetContent>*/}
+            {/*</Sheet>*/}
 
             {/* Raw JSON modal using custom themed Dialog */}
             {selectedRaw && (
