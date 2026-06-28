@@ -103,6 +103,7 @@ export const Summary = ({
                         }: SummaryProps) => {
 
     const [selectedRecommendation, setSelectedRecommendation] = useState<any | null>(null);
+    const [selectedFlags, setSelectedFlags] = useState<{ title: string; type: "green" | "red"; flags: any[] } | null>(null);
     const [dossierTab, setDossierTab] = useState<"ai_analysis" | "assessment_topics">("ai_analysis");
 
     if (!dossierOpen) return null;
@@ -342,12 +343,34 @@ export const Summary = ({
                                                             {/* Only show flags if it's not the Vibe Check */}
                                                             {!isVibeCheck && (
                                                                 <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-emerald-50 border border-emerald-200 text-emerald-700">
-                            {greenCount} GREEN
-                        </span>
-                                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-rose-50 border border-rose-200 text-rose-700">
-                            {redCount} RED
-                        </span>
+                                                                    <span
+                                                                        onClick={() => {
+                                                                            if (greenCount > 0 && Array.isArray(val.green_flags)) {
+                                                                                setSelectedFlags({
+                                                                                    title: `${label} - Green Flags`,
+                                                                                    type: "green",
+                                                                                    flags: val.green_flags
+                                                                                });
+                                                                            }
+                                                                        }}
+                                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-emerald-50 border border-emerald-200 text-emerald-700 ${greenCount > 0 ? 'cursor-pointer hover:bg-emerald-100 transition-colors' : ''}`}
+                                                                    >
+                                                                        {greenCount} GREEN
+                                                                    </span>
+                                                                    <span
+                                                                        onClick={() => {
+                                                                            if (redCount > 0 && Array.isArray(val.red_flags)) {
+                                                                                setSelectedFlags({
+                                                                                    title: `${label} - Red Flags`,
+                                                                                    type: "red",
+                                                                                    flags: val.red_flags
+                                                                                });
+                                                                            }
+                                                                        }}
+                                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-rose-50 border border-rose-200 text-rose-700 ${redCount > 0 ? 'cursor-pointer hover:bg-rose-100 transition-colors' : ''}`}
+                                                                    >
+                                                                        {redCount} RED
+                                                                    </span>
                                                                 </div>
                                                             )}
                                                         </div>
@@ -461,6 +484,106 @@ export const Summary = ({
                         >
                             Acknowledge AI Directive
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* RED/GREEN FLAGS DETAIL DIALOG */}
+            {selectedFlags && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-zinc-950/40 backdrop-blur-sm transition-all">
+                    <div className="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl space-y-5 text-zinc-900 overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-center justify-between border-b border-zinc-200 pb-4 shrink-0">
+                            <div className="flex items-center gap-2.5">
+                                {selectedFlags.type === "green" ? (
+                                    <CheckCircle className="w-5 h-5 text-emerald-600" />
+                                ) : (
+                                    <AlertTriangle className="w-5 h-5 text-rose-600" />
+                                )}
+                                <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider font-mono">
+                                    {selectedFlags.title}
+                                </h3>
+                            </div>
+                            <button
+                                onClick={() => setSelectedFlags(null)}
+                                className="p-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-900 transition-all cursor-pointer"
+                                type="button"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {/* Flags List Content */}
+                        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+                            {selectedFlags.flags && selectedFlags.flags.length > 0 ? (
+                                selectedFlags.flags.map((flag: any, index: number) => (
+                                    <div
+                                        key={index}
+                                        className={`p-4 rounded-xl border space-y-2.5 ${
+                                            selectedFlags.type === "green"
+                                                ? "bg-emerald-50/30 border-emerald-200/80"
+                                                : "bg-rose-50/30 border-rose-200/80"
+                                        }`}
+                                    >
+                                        {/* Label */}
+                                        <div className="flex items-center gap-2">
+                                            <span
+                                                className={`w-2 h-2 rounded-full ${
+                                                    selectedFlags.type === "green" ? "bg-emerald-500" : "bg-rose-500"
+                                                }`}
+                                            />
+                                            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900 font-mono">
+                                                {flag.label || flag.name || `Indicator #${index + 1}`}
+                                            </h4>
+                                        </div>
+
+                                        {/* Description */}
+                                        {flag.description && (
+                                            <p className="text-xs text-zinc-650 leading-relaxed font-sans">
+                                                {flag.description}
+                                            </p>
+                                        )}
+
+                                        {/* Quotes */}
+                                        {flag.quotes && Array.isArray(flag.quotes) && flag.quotes.length > 0 && (
+                                            <div className="space-y-1.5 pt-1">
+                                                <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 font-mono block">
+                                                    VERBATIM QUOTES
+                                                </span>
+                                                <div className="space-y-1.5">
+                                                    {flag.quotes.map((quote: any, qIdx: number) => {
+                                                        const quoteText = typeof quote === "string" ? quote : quote.text || quote.quote || JSON.stringify(quote);
+                                                        return (
+                                                            <div
+                                                                key={qIdx}
+                                                                className="border-l-2 border-indigo-400 pl-3 py-1 bg-white/80 rounded-r-lg text-xs italic text-zinc-700 font-serif shadow-2xs"
+                                                            >
+                                                                &ldquo;{quoteText}&rdquo;
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-xs text-zinc-400 italic text-center py-8">
+                                    No detailed indicators available for this item.
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="shrink-0 pt-2 border-t border-zinc-100">
+                            <button
+                                onClick={() => setSelectedFlags(null)}
+                                className="h-10 w-full rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-white transition-all shadow-md cursor-pointer uppercase tracking-wider"
+                                type="button"
+                            >
+                                Close Inspection
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

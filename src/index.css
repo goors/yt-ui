@@ -72,3 +72,14 @@ body {
 .title-bar {
     @apply h-[34px] bg-[var(--color-gtk-header)] flex items-center px-3 border-b border-[var(--color-gtk-border)];
 }
+
+/* Ensure Sonner toasts always render on top of all sheets, dialogs, and portals */
+[data-sonner-toaster] {
+    z-index: 999999 !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast],
+.toaster [data-sonner-toast] {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+}
