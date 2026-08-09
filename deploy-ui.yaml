@@ -38,7 +38,7 @@ spec:
     component: ui
   ports:
     - protocol: TCP
-      port: 80       # Match your Ingress rule
+      port: 8000       # Match your Ingress rule
       targetPort: 80   # Match your Container port
 
 ---
@@ -49,7 +49,6 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    # REMOVED: canary and canary-weight
     nginx.ingress.kubernetes.io/proxy-body-size: "1024m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
@@ -71,4 +70,4 @@ spec:
               service:
                 name: yt-ui-service
                 port:
-                  number: 80
+                  number: 8000
