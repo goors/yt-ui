@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Command, Briefcase, Database, PlusCircle } from 'lucide-react';
+import { Command, Database, PlusCircle } from 'lucide-react';
 import { UserProfile } from "@/components/user-profile.tsx";
 import { Link } from "@tanstack/react-router";
 

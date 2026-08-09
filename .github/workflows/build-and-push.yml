@@ -35,14 +35,7 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          mkdir -p ~/.kube ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
-          
-          # Start tunnel securely pointing back to the internal control plane
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -f -N -L 6444:10.200.0.1:6443 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
-          
           echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
-          sed -i 's#10.200.0.1:6443#127.0.0.1:6444#g' ~/.kube/config
           
           # Refresh registry credentials on target cluster namespace
           kubectl delete secret regcred --ignore-not-found
