@@ -8,7 +8,6 @@ jobs:
   # --- 1. UI BUILD JOB ---
   ui-service:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'ui')
     steps:
       - uses: actions/checkout@v4
 
